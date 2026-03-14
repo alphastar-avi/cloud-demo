@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, Download, Calendar, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,10 +27,11 @@ const Dashboard: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastDeleted, setLastDeleted] = useState<Transaction | null>(null);
 
   const selectedDate = new Date(selectedYear, selectedMonth - 1, 15);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get(`/transactions?year=${selectedYear}&month=${selectedMonth}`);
@@ -40,18 +41,39 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, selectedMonth]);
 
   useEffect(() => {
     fetchTransactions();
-  }, [selectedYear, selectedMonth]);
+  }, [fetchTransactions]);
 
   const handleDelete = async (id: number) => {
+    // Save the transaction before deleting for undo
+    const toDelete = transactions.find(t => t.id === id);
     try {
       await api.delete(`/transactions/${id}`);
+      if (toDelete) setLastDeleted(toDelete);
       fetchTransactions();
     } catch (error) {
       console.error('Failed to delete transaction', error);
+    }
+  };
+
+  const handleUndo = async () => {
+    if (!lastDeleted) return;
+    try {
+      await api.post('/transactions', {
+        type: lastDeleted.type,
+        title: lastDeleted.title,
+        amount: lastDeleted.amount,
+        category: lastDeleted.category,
+        description: lastDeleted.description,
+        transaction_date: lastDeleted.transaction_date,
+      });
+      setLastDeleted(null);
+      fetchTransactions();
+    } catch (error) {
+      console.error('Failed to undo deletion', error);
     }
   };
 
@@ -73,8 +95,9 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Years: 5 years back + current + 4 years forward
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
+  const years = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i);
 
   return (
     <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
@@ -204,7 +227,12 @@ const Dashboard: React.FC = () => {
             {loading ? (
               <div className="text-muted-foreground text-center">Loading...</div>
             ) : (
-              <TransactionList transactions={transactions} onDelete={handleDelete} />
+              <TransactionList
+                transactions={transactions}
+                onDelete={handleDelete}
+                lastDeleted={lastDeleted}
+                onUndo={handleUndo}
+              />
             )}
           </CardContent>
         </Card>

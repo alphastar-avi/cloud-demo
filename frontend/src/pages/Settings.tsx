@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, Download, Pencil, Check } from 'lucide-react';
+import api from '../api';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,16 +27,45 @@ function saveCategories(userId: number, categories: string[]) {
 }
 
 const Settings: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState('');
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     if (user) {
       setCategories(getCategories(user.id));
+      setNameValue(user.name || '');
     }
   }, [user]);
+
+  const handleSaveName = async () => {
+    if (!user || !nameValue.trim()) return;
+    setSavingName(true);
+    try {
+      const { data } = await api.put('/user/name', { name: nameValue.trim() });
+      updateUser(data.user);
+      setEditingName(false);
+    } catch (err) {
+      console.error('Failed to update name', err);
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveName();
+    }
+    if (e.key === 'Escape') {
+      setNameValue(user?.name || '');
+      setEditingName(false);
+    }
+  };
 
   const handleAddCategory = () => {
     const trimmed = newCategory.trim();
@@ -55,10 +85,28 @@ const Settings: React.FC = () => {
     saveCategories(user.id, updated);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleCategoryKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleAddCategory();
+    }
+  };
+
+  const handleExportAll = async () => {
+    try {
+      const response = await api.get('/transactions/export-all', {
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'all-transactions.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Failed to export all transactions', error);
     }
   };
 
@@ -80,7 +128,27 @@ const Settings: React.FC = () => {
         <CardContent className="space-y-3">
           <div>
             <Label className="text-xs text-muted-foreground">Name</Label>
-            <p className="text-sm font-medium">{user?.name || '—'}</p>
+            {editingName ? (
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  value={nameValue}
+                  onChange={e => setNameValue(e.target.value)}
+                  onKeyDown={handleNameKeyDown}
+                  className="flex-1 h-7 text-sm"
+                  autoFocus
+                />
+                <Button size="icon-xs" onClick={handleSaveName} disabled={savingName || !nameValue.trim()}>
+                  <Check className="size-3" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">{user?.name || '—'}</p>
+                <Button variant="ghost" size="icon-xs" onClick={() => setEditingName(true)} title="Edit name">
+                  <Pencil className="size-3 text-muted-foreground" />
+                </Button>
+              </div>
+            )}
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Email</Label>
@@ -93,7 +161,7 @@ const Settings: React.FC = () => {
       </Card>
 
       {/* Categories Card */}
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle>Expense Categories</CardTitle>
         </CardHeader>
@@ -125,7 +193,7 @@ const Settings: React.FC = () => {
               placeholder="New category"
               value={newCategory}
               onChange={e => setNewCategory(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleCategoryKeyDown}
               className="flex-1"
             />
             <Button size="sm" onClick={handleAddCategory} disabled={!newCategory.trim()}>
@@ -133,6 +201,20 @@ const Settings: React.FC = () => {
               Add
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Download All Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Export Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-3">Download all your transactions as a single CSV file.</p>
+          <Button variant="outline" onClick={handleExportAll}>
+            <Download className="size-4" />
+            Download All Transactions
+          </Button>
         </CardContent>
       </Card>
     </div>

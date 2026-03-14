@@ -1,16 +1,18 @@
 import React from 'react';
 import type { Transaction } from '../types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Undo2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 
 interface TransactionListProps {
   transactions: Transaction[];
   onDelete: (id: number) => void;
+  lastDeleted: Transaction | null;
+  onUndo: () => void;
 }
 
-const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
-  if (transactions.length === 0) {
+const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete, lastDeleted, onUndo }) => {
+  if (transactions.length === 0 && !lastDeleted) {
     return (
       <div className="text-center py-10 text-muted-foreground">
         No transactions found for this month.
@@ -20,6 +22,17 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
 
   return (
     <div className="flex flex-col gap-2">
+      {/* Undo bar */}
+      {lastDeleted && (
+        <button
+          onClick={onUndo}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground bg-muted/50 hover:bg-muted transition-colors cursor-pointer border border-dashed"
+        >
+          <Undo2 className="size-3.5" />
+          Undo delete: <span className="font-medium text-foreground">{lastDeleted.type === 'income' ? lastDeleted.title : lastDeleted.category}</span> — ₹{lastDeleted.amount.toFixed(2)}
+        </button>
+      )}
+
       {transactions.map(t => (
         <div
           key={t.id}

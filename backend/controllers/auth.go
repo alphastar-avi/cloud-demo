@@ -86,3 +86,34 @@ func Login(c *gin.Context) {
 		},
 	})
 }
+
+func UpdateUserName(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+
+	var body struct {
+		Name string `json:"name"`
+	}
+
+	if c.Bind(&body) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	user.Name = body.Name
+	database.DB.Save(&user)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Name updated successfully",
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+		},
+	})
+}

@@ -22,5 +22,12 @@ func RegisterRoutes(r *gin.Engine) {
 		transactions.POST("", controllers.AddTransaction)
 		transactions.DELETE("/:id", controllers.DeleteTransaction)
 		transactions.GET("/export", controllers.ExportTransactionsCSV)
+		transactions.GET("/export-all", controllers.ExportTransactionsCSV)
+	}
+
+	user := api.Group("/user")
+	user.Use(middlewares.RequireAuth)
+	{
+		user.PUT("/name", controllers.UpdateUserName)
 	}
 }
