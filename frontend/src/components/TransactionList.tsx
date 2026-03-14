@@ -2,6 +2,7 @@ import React from 'react';
 import type { Transaction } from '../types';
 import { Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -11,59 +12,47 @@ interface TransactionListProps {
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
   if (transactions.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+      <div className="text-center py-10 text-muted-foreground">
         No transactions found for this month.
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div className="flex flex-col gap-2">
       {transactions.map(t => (
-        <div key={t.id} style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          padding: '16px',
-          background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.05)'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ 
-                fontWeight: 600, 
-                color: t.type === 'income' ? 'var(--income-color)' : 'var(--text-main)' 
-              }}>
+        <div
+          key={t.id}
+          className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={`font-semibold text-sm ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
                 {t.type === 'income' ? t.title : t.category}
               </span>
             </div>
             {t.description && (
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+              <div className="text-xs text-muted-foreground mt-0.5 truncate">
                 {t.description}
               </div>
             )}
-            <div style={{ fontSize: '11px', color: 'rgba(148, 163, 184, 0.5)', marginTop: '6px' }}>
+            <div className="text-[11px] text-muted-foreground/60 mt-1">
               {format(new Date(t.transaction_date), 'MMM dd, yyyy')}
             </div>
           </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span style={{ 
-              fontWeight: 700, 
-              color: t.type === 'income' ? 'var(--income-color)' : 'var(--expense-color)',
-              fontSize: '16px'
-            }}>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <span className={`font-bold text-sm ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
               {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
             </span>
-            <button 
-              className="btn btn-outline" 
-              style={{ padding: '6px', border: 'none' }}
+            <Button
+              variant="ghost"
+              size="icon-xs"
               onClick={() => onDelete(t.id)}
               title="Delete"
             >
-              <Trash2 size={16} color="var(--danger-color)" />
-            </button>
+              <Trash2 className="size-3.5 text-destructive" />
+            </Button>
           </div>
         </div>
       ))}

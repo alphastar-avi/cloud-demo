@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import api from '../api';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 interface IncomeFormProps {
   onSuccess: () => void;
@@ -37,35 +40,35 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ onSuccess, selectedDate }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Source Title</label>
-        <input 
-          type="text" 
-          className="input-field" 
-          placeholder="e.g. Salary" 
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div className="space-y-1.5">
+        <Label htmlFor="income-title" className="text-xs">Source Title</Label>
+        <Input
+          id="income-title"
+          type="text"
+          placeholder="e.g. Salary"
           value={title}
           onChange={e => setTitle(e.target.value)}
           required
         />
       </div>
 
-      <div>
-        <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Amount</label>
-        <input 
+      <div className="space-y-1.5">
+        <Label htmlFor="income-amount" className="text-xs">Amount</Label>
+        <Input
+          id="income-amount"
           type="number"
-          step="0.01" 
-          className="input-field" 
-          placeholder="0.00" 
+          step="0.01"
+          placeholder="0.00"
           value={amount}
           onChange={e => setAmount(e.target.value)}
           required
         />
       </div>
 
-      <button type="submit" className="btn btn-primary" style={{ marginTop: '8px' }} disabled={loading}>
+      <Button type="submit" size="sm" className="mt-1" disabled={loading}>
         {loading ? 'Adding...' : 'Add Income'}
-      </button>
+      </Button>
     </form>
   );
 };

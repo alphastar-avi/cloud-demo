@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import api from '../api';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ExpenseFormProps {
   onSuccess: () => void;
@@ -41,28 +45,29 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, selectedDate }) =>
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <div>
-          <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Category</label>
-          <select 
-            className="input-field" 
-            value={category}
-            onChange={e => setCategory(e.target.value)}
-            required
-            style={{ appearance: 'none' }}
-          >
-            {CATEGORIES.map(c => <option key={c} value={c} style={{ color: 'black' }}>{c}</option>)}
-          </select>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Category</Label>
+          <Select value={category} onValueChange={(v) => v && setCategory(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map(c => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        
-        <div>
-          <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Amount</label>
-          <input 
+
+        <div className="space-y-1.5">
+          <Label htmlFor="expense-amount" className="text-xs">Amount</Label>
+          <Input
+            id="expense-amount"
             type="number"
-            step="0.01" 
-            className="input-field" 
-            placeholder="0.00" 
+            step="0.01"
+            placeholder="0.00"
             value={amount}
             onChange={e => setAmount(e.target.value)}
             required
@@ -70,20 +75,20 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSuccess, selectedDate }) =>
         </div>
       </div>
 
-      <div>
-        <label style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Description</label>
-        <input 
-          type="text" 
-          className="input-field" 
-          placeholder="Details..." 
+      <div className="space-y-1.5">
+        <Label htmlFor="expense-desc" className="text-xs">Description</Label>
+        <Input
+          id="expense-desc"
+          type="text"
+          placeholder="Details..."
           value={description}
           onChange={e => setDescription(e.target.value)}
         />
       </div>
 
-      <button type="submit" className="btn btn-danger" style={{ marginTop: '8px' }} disabled={loading}>
+      <Button type="submit" variant="destructive" className="mt-1" disabled={loading}>
         {loading ? 'Adding...' : 'Add Expense'}
-      </button>
+      </Button>
     </form>
   );
 };

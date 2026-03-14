@@ -7,17 +7,13 @@ interface SankeyChartProps {
 }
 
 const SankeyChart: React.FC<SankeyChartProps> = ({ transactions }) => {
-  // Process Data for Sankey Diagram 
-  // Map Income sources to "Budget" and "Budget" to Expenses
   const incomes = transactions.filter(t => t.type === 'income');
   const expenses = transactions.filter(t => t.type === 'expense');
 
-  // If no transactions, don't render chart
   if (transactions.length === 0) {
-    return <div style={{ color: 'var(--text-muted)' }}>No data for the selected period.</div>;
+    return <div className="text-muted-foreground text-sm">No data for the selected period.</div>;
   }
 
-  // Calculate nodes and links
   const nodesMap = new Set<string>();
   const linksMap = new Map<string, number>();
 
@@ -26,7 +22,6 @@ const SankeyChart: React.FC<SankeyChartProps> = ({ transactions }) => {
   incomes.forEach(inc => {
     const sourceNode = inc.title || 'Other Income';
     nodesMap.add(sourceNode);
-
     const linkKey = `${sourceNode}->Budget`;
     linksMap.set(linkKey, (linksMap.get(linkKey) || 0) + inc.amount);
   });
@@ -34,7 +29,6 @@ const SankeyChart: React.FC<SankeyChartProps> = ({ transactions }) => {
   expenses.forEach(exp => {
     const targetNode = exp.category || 'Other Expense';
     nodesMap.add(targetNode);
-
     const linkKey = `Budget->${targetNode}`;
     linksMap.set(linkKey, (linksMap.get(linkKey) || 0) + exp.amount);
   });
@@ -45,22 +39,22 @@ const SankeyChart: React.FC<SankeyChartProps> = ({ transactions }) => {
     return { source, target, value };
   });
 
-  // Theme for Nivo components to match dark mode
   const theme = {
-    textColor: '#f8fafc',
+    textColor: 'hsl(var(--foreground))',
     tooltip: {
       container: {
-        background: '#0f172a',
-        color: '#f8fafc',
-        fontSize: '14px',
+        background: 'hsl(var(--popover))',
+        color: 'hsl(var(--popover-foreground))',
+        fontSize: '13px',
         borderRadius: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
+        border: '1px solid hsl(var(--border))',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
       }
     }
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', padding: '24px 0' }}>
+    <div className="w-full h-full py-6">
       <ResponsiveSankey
         data={{ nodes, links }}
         margin={{ top: 20, right: 20, bottom: 20, left: 20 }}

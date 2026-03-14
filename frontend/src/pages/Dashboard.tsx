@@ -9,6 +9,11 @@ import IncomeForm from '../components/IncomeForm';
 import ExpenseForm from '../components/ExpenseForm';
 import TransactionList from '../components/TransactionList';
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -21,7 +26,6 @@ const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Derive date object strictly for child components to use if needed
   const selectedDate = new Date(selectedYear, selectedMonth - 1, 15);
 
   const fetchTransactions = async () => {
@@ -67,126 +71,139 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Generate an array of years, e.g., current year down to 5 years ago
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="p-6 max-w-[1400px] mx-auto">
       
       {/* Header */}
-      <header className="glass-panel" style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        padding: '16px 24px',
-        marginBottom: '24px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, background: 'linear-gradient(to right, #3b82f6, #10b981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            CashFlow
-          </h1>
-        </div>
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-foreground">CashFlow</h1>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <div className="flex items-center gap-4">
           
-          {/* Custom Modern Date Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--input-bg)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
-            <Calendar size={16} color="var(--text-muted)" />
-            
-            <select 
-              className="input-field" 
-              style={{ padding: '4px', border: 'none', background: 'transparent', width: 'auto', outline: 'none', appearance: 'none', cursor: 'pointer', paddingRight: '20px' }}
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+          {/* Calendar Popover — month/year + income source */}
+          <Popover>
+            <PopoverTrigger
+              className="inline-flex items-center gap-2 rounded-lg border border-input bg-transparent px-3 py-2 text-sm font-medium transition-colors hover:bg-muted cursor-pointer"
             >
-              {MONTHS.map((month, index) => (
-                <option key={index} value={index + 1} style={{ color: '#000' }}>
-                  {month}
-                </option>
-              ))}
-            </select>
-            
-            <select 
-              className="input-field" 
-              style={{ padding: '4px', border: 'none', background: 'transparent', width: 'auto', outline: 'none', appearance: 'none', cursor: 'pointer' }}
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-            >
-              {years.map(year => (
-                <option key={year} value={year} style={{ color: '#000' }}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div style={{ height: '24px', width: '1px', backgroundColor: 'var(--panel-border)' }}></div>
+              <Calendar className="size-4 text-muted-foreground" />
+              <span>{MONTHS[selectedMonth - 1]} {selectedYear}</span>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="grid gap-4">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium leading-none">Select Period</h4>
+                  <p className="text-xs text-muted-foreground">Choose a month and year, then add income.</p>
+                </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '14px', fontWeight: 500 }}>{user?.email}</div>
-            </div>
-            <button className="btn btn-outline" style={{ padding: '8px' }} onClick={logout} title="Logout">
-              <LogOut size={18} />
-            </button>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Month Selector */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Month</label>
+                    <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MONTHS.map((month, index) => (
+                          <SelectItem key={index} value={String(index + 1)}>
+                            {month}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Year Selector */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Year</label>
+                    <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {years.map(year => (
+                          <SelectItem key={year} value={String(year)}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t" />
+
+                {/* Income Form embedded */}
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium leading-none">Add Income Source</h4>
+                </div>
+                <IncomeForm onSuccess={fetchTransactions} selectedDate={selectedDate} />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <div className="h-6 w-px bg-border" />
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{user?.email}</span>
+            <Button variant="outline" size="icon" onClick={logout} title="Logout">
+              <LogOut className="size-4" />
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Layout Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px' }}>
+      <div className="grid grid-cols-[minmax(0,1fr)_350px] gap-6">
         
-        {/* Left Column: Sankey + Add Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Left Column: Sankey + Add Expense */}
+        <div className="flex flex-col gap-6">
           
-          {/* Sankey Diagram Wrapper */}
-          <div className="glass-panel" style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            {loading ? (
-              <p style={{ color: 'var(--text-muted)' }}>Loading Activity...</p>
-            ) : (
-              <SankeyChart transactions={transactions} />
-            )}
-          </div>
+          {/* Sankey Diagram */}
+          <Card>
+            <CardContent className="h-[400px] flex items-center justify-center overflow-hidden p-0">
+              {loading ? (
+                <p className="text-muted-foreground">Loading Activity...</p>
+              ) : (
+                <SankeyChart transactions={transactions} />
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Add Transactions Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '24px' }}>
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <h3 style={{ marginBottom: '16px', color: 'var(--income-color)', fontSize: '18px' }}>Add Income</h3>
-              <IncomeForm onSuccess={fetchTransactions} selectedDate={selectedDate} />
-            </div>
-            
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <h3 style={{ marginBottom: '16px', color: 'var(--expense-color)', fontSize: '18px' }}>Add Expense</h3>
+          {/* Add Expense */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-destructive">Add Expense</CardTitle>
+            </CardHeader>
+            <CardContent>
               <ExpenseForm onSuccess={fetchTransactions} selectedDate={selectedDate} />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right Column: Transactions List */}
-        <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: 'calc(400px + 24px + 300px)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '18px' }}>Transactions</h3>
+        <Card className="flex flex-col h-[calc(400px+24px+300px)]">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Transactions</CardTitle>
             {transactions.length > 0 && (
-              <button 
-                className="btn btn-outline" 
-                style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                onClick={handleExportCSV}
-              >
-                <Download size={14} /> Download CSV
-              </button>
+              <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                <Download className="size-3.5" />
+                Download CSV
+              </Button>
             )}
-          </div>
-          
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto pr-2">
             {loading ? (
-              <div style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Loading...</div>
+              <div className="text-muted-foreground text-center">Loading...</div>
             ) : (
               <TransactionList transactions={transactions} onDelete={handleDelete} />
             )}
-          </div>
-        </div>
-
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
